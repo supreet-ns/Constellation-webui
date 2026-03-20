@@ -1,32 +1,72 @@
-## 📡 Constellation WebUI: Operator's Manual
+# Constellation WebUI - Prototype
 
-Welcome to the Constellation WebUI. This interface is designed for low-latency, ergonomic control of satellite telemetry and finite state machines (FSM). Here is how to operate the dashboard.
+🚀 **Live Demo:** https://constellation-webui.vercel.app
+*(Clicking this link directly opens the online webpage prototype)*
 
-### 1. FSM Control Panel (State Transitions)
-The core of the dashboard is the FSM logic controller. You must step through the hardware states in the correct order:
+---
 
-* **Initialize (INIT):** Prepares the system and connects to the hardware nodes.
-* **Launch / Run:** Activates the data streams. Telemetry will not display until the system successfully reaches this state.
-* **Reconfigure:** Pauses active streams to allow for parameter adjustments on the fly.
-* **Stop / Safe:** Immediately halts all data collection and returns the system to a safe standby mode.
+This repository contains a prototype web interface for the Constellation framework. 
 
-### 2. Pro-Operator Keyboard Shortcuts
-To maximize efficiency and reduce reliance on a mouse, the UI features a built-in event listener for keyboard execution. Make sure the browser window is in focus, then use these keys to trigger immediate state changes:
+The dashboard takes inspiration from the existing MissionControl and Observatory GUIs, combining Finite State Machine (FSM) controls and live telemetry visualization into a single, high-performance interface.
 
-* **Press `I`** ➔ Initialize System
-* **Press `O`** ➔ Launch / Run System
-* **Press `R`** ➔ Reconfigure System
-* **Press `S`** ➔ Stop / Emergency Halt
+## 🎨 UI/UX Design Philosophy
+To reduce operator eye strain during long laboratory shifts, this interface utilizes an **Ergonomic Twilight Palette** combined with a **"Liquid Glass" (Glassmorphism)** aesthetic. This creates visual depth and ensures critical telemetry and log data stand out immediately.
 
-### 3. Real-Time Telemetry Graphs
-Located in the main viewing area, the telemetry charts visualize the CMDP metrics.
+## ✨ Implemented Features
+This prototype fulfills all evaluation requirements for interactive elements:
 
-* **Awaiting State:** If the dashboard is blurred with a "Awaiting RUN state" message, you must push the system to the **Launch** state first.
-* **Live Plotting:** Once running, the graphs will automatically plot incoming data points. Hover over the nodes on the graph to see exact timestamps and metric values in the glassmorphism tooltip.
+1. **Interactive Buttons (FSM Controller):** Visual state machine controls to Initialize, Launch, Reconfigure, and Stop the hardware constellation.
+2. **Real-Time Graphs:** Live-updating telemetry charts simulating CMDP metrics.
+3. **Log Displays:** A live event log stream that auto-categorizes incoming messages by severity (INFO, WARNING, CRITICAL).
 
-### 4. Live Event Log Stream
-The right-side panel contains the active log buffer. It categorizes system messages automatically so operators can read them at a glance against the twilight background:
+**⚡ Pro-Operator Keyboard Shortcuts:**
+Low-latency keyboard navigation allows operators to trigger states instantly without a mouse:
+* `I` - Initialize
+* `O` - Launch
+* `R` - Reconfigure
+* `S` - Stop / Emergency Safe
 
-* **Standard Logs:** Gray/Stone text indicating normal system operations and state changes.
-* **Component Senders:** Highlighted in purple to quickly identify which hardware node is sending the message.
-* **CRITICAL Alerts:** Flashing/pulsing red text. If you see this, the system has encountered an error, and the operator should immediately hit **`S`** (Stop) to safe the hardware.
+## 🛠️ Tech Stack
+* **Framework:** React + Vite
+* **Styling:** Tailwind CSS
+* **Data Visualization:** Recharts
+* **Icons:** Lucide React
+
+---
+
+## ⚙️ Instructions to Run Locally
+
+If you prefer to evaluate this project on your local machine rather than the live link, please follow these steps:
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recommended).
+
+### Setup Steps
+
+1. **Clone this repository:**
+```bash
+git clone https://github.com/supreet-ns/Constellation-webui.git
+
+2. **Navigate into the project directory:**
+```bash
+cd Constellation-webui
+
+3. **Install the required dependencies:**
+```bash
+npm install
+
+4. **Start the local development server:**
+```bash
+npm run dev
+
+5. **View the application:**
+Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
+---
+### The Final Git Push
+
+Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
+
+```bash
+git add README.md
+git commit -m "docs: add direct Vercel deployment link to the top of the README"
+git push origin main
