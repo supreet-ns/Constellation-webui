@@ -28,10 +28,10 @@ Instead of a harsh white background or a completely dark mode, this UI utilizes 
 To get this prototype running on your local machine, follow these steps:
 
 ### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recommended).
+Make sure you have Node.js installed (v16 or higher recommended).
 
 ### Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/supreet-ns/Constellation-webui.git](https://github.com/supreet-ns/Constellation-webui.git)
+```bash
+git clone https://github.com/supreet-ns/Constellation-webui.git
