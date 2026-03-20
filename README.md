@@ -1,37 +1,32 @@
-# Constellation WebUI - Prototype
+## 📡 Constellation WebUI: Operator's Manual
 
-A modern, high-performance web interface prototype for the Constellation framework. This project was developed as an evaluation task for **CERN-HSF (GSoC 2026)**, drawing inspiration from existing MissionControl and Observatory GUIs while introducing a refined, operator-focused design language.
+Welcome to the Constellation WebUI. This interface is designed for low-latency, ergonomic control of satellite telemetry and finite state machines (FSM). Here is how to operate the dashboard.
 
-## 🎨 Design Philosophy: "Liquid Glass" & Ergonomics
-Working in laboratory environments requires interfaces that are highly legible but don't cause eye strain over long shifts. 
-Instead of a harsh white background or a completely dark mode, this UI utilizes an **Ergonomic Twilight Palette** combined with a **"Liquid Glass" (Glassmorphism)** aesthetic. This creates visual depth, reduces operator fatigue, and ensures critical telemetry and log data stand out immediately.
+### 1. FSM Control Panel (State Transitions)
+The core of the dashboard is the FSM logic controller. You must step through the hardware states in the correct order:
 
-## ✨ Key Features
-* **Interactive FSM Controller:** Visual state machine controls to initialize, launch, and reconfigure the satellite constellation.
-* **Real-Time Telemetry Visualization:** Live-updating data graphs simulating CMDP metrics.
-* **Live Event Log Stream:** Color-coded log displays for instant status recognition (INFO, WARNING, CRITICAL).
-* **Pro-Operator Keyboard Shortcuts:** Low-latency keyboard navigation allows operators to trigger states without a mouse:
-  * `I` - Initialize
-  * `O` - Launch
-  * `R` - Reconfigure
-  * `S` - Stop
+* **Initialize (INIT):** Prepares the system and connects to the hardware nodes.
+* **Launch / Run:** Activates the data streams. Telemetry will not display until the system successfully reaches this state.
+* **Reconfigure:** Pauses active streams to allow for parameter adjustments on the fly.
+* **Stop / Safe:** Immediately halts all data collection and returns the system to a safe standby mode.
 
-## 🛠️ Tech Stack
-* **Framework:** React + Vite
-* **Styling:** Tailwind CSS (for glassmorphism and custom palette)
-* **Icons & Charts:** Lucide React & Recharts
+### 2. Pro-Operator Keyboard Shortcuts
+To maximize efficiency and reduce reliance on a mouse, the UI features a built-in event listener for keyboard execution. Make sure the browser window is in focus, then use these keys to trigger immediate state changes:
 
----
+* **Press `I`** ➔ Initialize System
+* **Press `O`** ➔ Launch / Run System
+* **Press `R`** ➔ Reconfigure System
+* **Press `S`** ➔ Stop / Emergency Halt
 
-## 🚀 Instructions to Run Locally
+### 3. Real-Time Telemetry Graphs
+Located in the main viewing area, the telemetry charts visualize the CMDP metrics.
 
-To get this prototype running on your local machine, follow these steps:
+* **Awaiting State:** If the dashboard is blurred with a "Awaiting RUN state" message, you must push the system to the **Launch** state first.
+* **Live Plotting:** Once running, the graphs will automatically plot incoming data points. Hover over the nodes on the graph to see exact timestamps and metric values in the glassmorphism tooltip.
 
-### Prerequisites
-Make sure you have Node.js installed (v16 or higher recommended).
+### 4. Live Event Log Stream
+The right-side panel contains the active log buffer. It categorizes system messages automatically so operators can read them at a glance against the twilight background:
 
-### Installation
-
-1. **Clone the repository:**
-```bash
-git clone https://github.com/supreet-ns/Constellation-webui.git
+* **Standard Logs:** Gray/Stone text indicating normal system operations and state changes.
+* **Component Senders:** Highlighted in purple to quickly identify which hardware node is sending the message.
+* **CRITICAL Alerts:** Flashing/pulsing red text. If you see this, the system has encountered an error, and the operator should immediately hit **`S`** (Stop) to safe the hardware.
