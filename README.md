@@ -1,16 +1,68 @@
-# React + Vite
+# Constellation WebUI - Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+🚀 **Live Demo:** [https://constellation-webui.vercel.app](https://constellation-webui.vercel.app)  
+*(Clicking this link directly opens the online webpage prototype)*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This repository contains a prototype web interface for the Constellation framework.
 
-## React Compiler
+The dashboard combines Finite State Machine (FSM) controls and live telemetry visualization into a single, high-performance interface.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎨 UI/UX Design Philosophy
+To reduce operator eye strain during long laboratory shifts, this interface utilizes an **Ergonomic Twilight Palette** combined with a **"Liquid Glass" (Glassmorphism)** aesthetic. This creates visual depth and ensures critical telemetry and log data stand out immediately.
 
-## Expanding the ESLint configuration
+## ✨ Implemented Features
+This prototype fulfills all evaluation requirements for interactive elements:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Interactive Buttons (FSM Controller):** Visual state machine controls to Initialize, Launch, Data acquire and Stop the hardware constellation.
+2. **Real-Time Graphs:** Live-updating telemetry charts simulating CMDP metrics.
+3. **Log Displays:** A live event log stream that auto-categorizes incoming messages by severity (INFO, WARNING, CRITICAL).
+
+**⚡ Pro-Operator Keyboard Shortcuts:**
+Low-latency keyboard navigation allows operators to trigger states instantly without a mouse:
+* `I` - Initialize
+* `O` - Launch
+* `R` - run
+* `S` - Stop / Emergency Safe
+
+## 🛠️ Tech Stack
+* **Framework:** React + Vite
+* **Styling:** Tailwind CSS
+* **Data Visualization:** Recharts
+* **Icons:** Lucide React
+
+---
+
+## ⚙️ Instructions to Run Locally
+
+If you prefer to evaluate this project on your local machine rather than the live link, please follow these steps:
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recommended).
+
+### Setup Steps
+
+1. **Clone this repository:**
+   
+   git clone https://github.com/supreet-ns/Constellation-webui.git
+
+2. **Navigate into the project directory:**
+
+   cd Constellation-webui
+
+3. **Install the required dependencies:**
+ 
+    npm install
+
+4. **Start the local development server:**
+
+    npm run dev
+5. **View the application:**
+Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
