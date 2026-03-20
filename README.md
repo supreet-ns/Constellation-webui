@@ -1,16 +1,37 @@
-# React + Vite
+# Constellation WebUI - Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, high-performance web interface prototype for the Constellation framework. This project was developed as an evaluation task for **CERN-HSF (GSoC 2026)**, drawing inspiration from existing MissionControl and Observatory GUIs while introducing a refined, operator-focused design language.
 
-Currently, two official plugins are available:
+## 🎨 Design Philosophy: "Liquid Glass" & Ergonomics
+Working in laboratory environments requires interfaces that are highly legible but don't cause eye strain over long shifts. 
+Instead of a harsh white background or a completely dark mode, this UI utilizes an **Ergonomic Twilight Palette** combined with a **"Liquid Glass" (Glassmorphism)** aesthetic. This creates visual depth, reduces operator fatigue, and ensures critical telemetry and log data stand out immediately.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Key Features
+* **Interactive FSM Controller:** Visual state machine controls to initialize, launch, and reconfigure the satellite constellation.
+* **Real-Time Telemetry Visualization:** Live-updating data graphs simulating CMDP metrics.
+* **Live Event Log Stream:** Color-coded log displays for instant status recognition (INFO, WARNING, CRITICAL).
+* **Pro-Operator Keyboard Shortcuts:** Low-latency keyboard navigation allows operators to trigger states without a mouse:
+  * `I` - Initialize
+  * `O` - Launch
+  * `R` - Reconfigure
+  * `S` - Stop
 
-## React Compiler
+## 🛠️ Tech Stack
+* **Framework:** React + Vite
+* **Styling:** Tailwind CSS (for glassmorphism and custom palette)
+* **Icons & Charts:** Lucide React & Recharts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚀 Instructions to Run Locally
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+To get this prototype running on your local machine, follow these steps:
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recommended).
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/supreet-ns/Constellation-webui.git](https://github.com/supreet-ns/Constellation-webui.git)
