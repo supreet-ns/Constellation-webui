@@ -7,7 +7,7 @@
 
 This repository contains a prototype web interface for the Constellation framework. 
 
-The dashboard takes inspiration from the existing MissionControl and Observatory GUIs, combining Finite State Machine (FSM) controls and live telemetry visualization into a single, high-performance interface.
+The dashboard combines Finite State Machine (FSM) controls and live telemetry visualization into a single, high-performance interface.
 
 ## 🎨 UI/UX Design Philosophy
 To reduce operator eye strain during long laboratory shifts, this interface utilizes an **Ergonomic Twilight Palette** combined with a **"Liquid Glass" (Glassmorphism)** aesthetic. This creates visual depth and ensures critical telemetry and log data stand out immediately.
