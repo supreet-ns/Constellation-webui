@@ -61,4 +61,4 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
 
 5. **View the application:**
     Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
----
+
