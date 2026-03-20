@@ -47,19 +47,19 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
 ```bash
 git clone https://github.com/supreet-ns/Constellation-webui.git
 
-2. **Navigate into the project directory:**
+*2. Navigate into the project directory:
 ```bash
 cd Constellation-webui
 
-3. **Install the required dependencies:**
+*3. Install the required dependencies:
 ```bash
 npm install
 
-4. **Start the local development server:**
+*4. Start the local development server:
 ```bash
 npm run dev
 
-5. **View the application:**
+*5. View the application:
 Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
 ---
 ### The Final Git Push
