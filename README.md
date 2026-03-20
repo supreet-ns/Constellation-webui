@@ -64,8 +64,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
 ---
 ### The Final Git Push
 Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
-
-    ```bash
+ ```bash
     git add README.md
     git commit -m "docs: add direct Vercel deployment link to the top of the README"
     git push origin main
