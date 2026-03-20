@@ -60,11 +60,11 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
         npm run dev
 
 5. **View the application:**
-        Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
+    Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
 ---
 ### The Final Git Push
 
-        Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
+    Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
 
     ```bash
     git add README.md
