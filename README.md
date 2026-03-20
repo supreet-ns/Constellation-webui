@@ -63,7 +63,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
     Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
 ---
 ### The Final Git Push
-Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
+Once you type this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
  ```bash
     git add README.md
     git commit -m "docs: add direct Vercel deployment link to the top of the README"
