@@ -22,8 +22,8 @@ This prototype fulfills all evaluation requirements for interactive elements:
 **⚡ Pro-Operator Keyboard Shortcuts:**
 Low-latency keyboard navigation allows operators to trigger states instantly without a mouse:
 * `I` - Initialize
-* `O` - Launch
-* `R` - Reconfigure
+* `O` - Orbit 
+* `R` - Run 
 * `S` - Stop / Emergency Safe
 
 ## 🛠️ Tech Stack
@@ -45,28 +45,28 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
 
 1. **Clone this repository:**
 
-git clone https://github.com/supreet-ns/Constellation-webui.git
+        git clone https://github.com/supreet-ns/Constellation-webui.git
 
 2. **Navigate into the project directory:**
 
-cd Constellation-webui
+        cd Constellation-webui
 
 3. **Install the required dependencies:**
 
-npm install
+        npm install
 
 4. **Start the local development server:**
 
-npm run dev
+        npm run dev
 
 5. **View the application:**
-Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
+        Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
 ---
 ### The Final Git Push
 
-Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
+        Once you paste this into VS Code and save, run these exact commands in your terminal to lock in the final version on GitHub:
 
-```bash
-git add README.md
-git commit -m "docs: add direct Vercel deployment link to the top of the README"
-git push origin main
+    ```bash
+    git add README.md
+    git commit -m "docs: add direct Vercel deployment link to the top of the README"
+    git push origin main
