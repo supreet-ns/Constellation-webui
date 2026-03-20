@@ -15,7 +15,7 @@ To reduce operator eye strain during long laboratory shifts, this interface util
 ## ✨ Implemented Features
 This prototype fulfills all evaluation requirements for interactive elements:
 
-1. **Interactive Buttons (FSM Controller):** Visual state machine controls to Initialize, Launch, Reconfigure, and Stop the hardware constellation.
+1. **Interactive Buttons (FSM Controller):** Visual state machine controls to Initialize, Launch, Data acquire and Stop the hardware constellation.
 2. **Real-Time Graphs:** Live-updating telemetry charts simulating CMDP metrics.
 3. **Log Displays:** A live event log stream that auto-categorizes incoming messages by severity (INFO, WARNING, CRITICAL).
 
