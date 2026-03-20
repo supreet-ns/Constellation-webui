@@ -22,8 +22,8 @@ This prototype fulfills all evaluation requirements for interactive elements:
 **⚡ Pro-Operator Keyboard Shortcuts:**
 Low-latency keyboard navigation allows operators to trigger states instantly without a mouse:
 * `I` - Initialize
-* `O` - Launch
-* `R` - run
+* `O` - Orbit
+* `R` - Run
 * `S` - Stop / Emergency Safe
 
 ## 🛠️ Tech Stack
@@ -61,7 +61,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16 or higher recom
 5. **View the application:**
 Open your browser and navigate to the local host URL provided in the terminal (default is usually http://localhost:5173).
 
----
+
 
 ---
 
