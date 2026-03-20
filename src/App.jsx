@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Terminal, Activity, Server, AlertCircle, Play, Square, ShieldAlert, Power } from 'lucide-react';
+import { Terminal, Activity, Server, AlertCircle, Play, Square, ShieldAlert, Power, Link, Loader2, Info } from 'lucide-react';
 
 export default function ConstellationCommandCenter() {
+  // Connection State
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+
   // Constellation FSM Global State
   const [globalState, setGlobalState] = useState('INIT'); 
   const [runId, setRunId] = useState('N/A');
@@ -15,14 +19,27 @@ export default function ConstellationCommandCenter() {
     { id: 'sat-3', name: 'ESP32_EnvMonitor', type: 'IoT_Sensor', state: 'INIT', ping: 45 }
   ]);
 
-  // Telemetry & Logs
   const [telemetry, setTelemetry] = useState([]);
-  const [logs, setLogs] = useState([
-    { time: new Date().toLocaleTimeString(), level: 'STATUS', sender: 'Constellation', msg: 'System Initialized. Awaiting ORBIT transition.' }
-  ]);
+  const [logs, setLogs] = useState([]);
 
-  // Background UI "Heartbeat" (Updates pings dynamically)
+  // Connection Handler
+  const handleConnect = () => {
+    setIsConnecting(true);
+    setTimeout(() => {
+      setIsConnected(true);
+      setIsConnecting(false);
+      addLog('STATUS', 'Constellation', 'Handshake successful. Connected to CSCP/CMDP core.');
+      addLog('INFO', 'Network', 'Gateway established at 127.0.0.1:23953');
+    }, 1500);
+  };
+
+  const addLog = (level, sender, msg) => {
+    setLogs(prev => [{ time: new Date().toLocaleTimeString(), level, sender, msg }, ...prev].slice(0, 50));
+  };
+
+  // Background UI Heartbeat (Pings)
   useEffect(() => {
+    if (!isConnected) return;
     const heartbeat = setInterval(() => {
       setSatellites(prev => prev.map(sat => ({
         ...sat,
@@ -30,250 +47,266 @@ export default function ConstellationCommandCenter() {
       })));
     }, 2000);
     return () => clearInterval(heartbeat);
-  }, [globalState]);
+  }, [globalState, isConnected]);
 
-  // Simulation Engine: Runs only when State is "RUN"
+  // Simulation Engine (RUN state logic)
   useEffect(() => {
     let interval;
     if (globalState === 'RUN') {
       interval = setInterval(() => {
         setRunDuration(prev => prev + 1);
-        
-        // Simulate live graph telemetry
         setTelemetry(prev => {
           const newPoint = {
             time: new Date().toLocaleTimeString([], { hour12: false, second: '2-digit', minute:'2-digit' }),
-            eventRate: Math.floor(1000 + Math.random() * 250),
-            temp: +(24 + Math.random() * 2).toFixed(1)
+            eventRate: Math.floor(1100 + Math.random() * 200),
+            temp: +(25 + Math.random() * 1.5).toFixed(1)
           };
-          return [...prev, newPoint].slice(-15); // Keep last 15 points
+          return [...prev, newPoint].slice(-15);
         });
 
-        // Simulate live Observatory logs
-        if (Math.random() > 0.6) {
-          const levels = ['INFO', 'STATUS', 'WARNING'];
-          const randomLevel = levels[Math.floor(Math.random() * levels.length)];
-          const senders = ['Caribou_Telescope', 'ESP32_EnvMonitor'];
-          const sender = senders[Math.floor(Math.random() * senders.length)];
-          
-          setLogs(prev => [{
-            time: new Date().toLocaleTimeString(),
-            level: randomLevel,
-            sender: sender,
-            msg: randomLevel === 'WARNING' ? 'Minor latency spike detected in data bus.' : 'Data chunk written successfully.'
-          }, ...prev].slice(0, 40));
+        if (Math.random() > 0.7) {
+          addLog('INFO', 'Storage', 'Event packet synchronized and written to disk.');
         }
       }, 1000);
     }
     return () => clearInterval(interval);
   }, [globalState]);
 
-  // FSM Command Handlers
   const handleTransition = (newState) => {
     setGlobalState(newState);
-    const newSats = satellites.map(sat => ({ ...sat, state: newState }));
-    setSatellites(newSats);
+    setSatellites(satellites.map(s => ({ ...s, state: newState })));
     
     if (newState === 'RUN') {
-      setRunId(`Run_${Math.floor(1000 + Math.random() * 9000)}`);
+      setRunId(`Run_${Math.floor(2000 + Math.random() * 5000)}`);
       setRunDuration(0);
-      setTelemetry([]); // Clear graph on new run
-    } else if (newState === 'ERROR') {
-      setRunId('HALTED');
+      setTelemetry([]);
     }
     
-    setLogs(prev => [{
-      time: new Date().toLocaleTimeString(),
-      level: newState === 'ERROR' ? 'CRITICAL' : 'STATUS',
-      sender: 'MissionControl',
-      msg: `FSM Command Executed: Constellation transitioned to ${newState} state.`
-    }, ...prev]);
+    addLog(newState === 'ERROR' ? 'CRITICAL' : 'MissionControl', `FSM Transition: ${globalState} -> ${newState}`);
   };
 
-  // UI Helpers
   const getStateColor = (state) => {
-    switch(state) {
-      case 'RUN': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
-      case 'ORBIT': return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
-      case 'INIT': return 'text-slate-400 bg-slate-400/10 border-slate-400/20';
-      case 'ERROR': return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
-      default: return 'text-slate-400';
-    }
+    const colors = {
+      RUN: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+      ORBIT: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+      INIT: 'text-slate-400 bg-slate-400/10 border-slate-400/20',
+      ERROR: 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+    };
+    return colors[state] || 'text-slate-400';
   };
 
-  const getLogColor = (level) => {
-    switch(level) {
-      case 'CRITICAL': return 'text-rose-500';
-      case 'WARNING': return 'text-amber-400';
-      case 'STATUS': return 'text-emerald-400';
-      case 'INFO': return 'text-blue-400';
-      default: return 'text-slate-300';
+  // UX Helper: Dynamic Operator Guide
+  const getOperatorGuide = () => {
+    switch(globalState) {
+      case 'INIT': return "System initialized and awaiting configuration. Click ORBIT to launch and configure satellites.";
+      case 'ORBIT': return "Satellites are in orbit and configured. Click START ACQUISITION to begin recording telemetry data.";
+      case 'RUN': return "Data acquisition in progress. Monitoring live CMDP telemetry stream.";
+      case 'ERROR': return "CRITICAL FAILURE DETECTED. System halted. Require manual reset.";
+      default: return "Awaiting operator input.";
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-6 font-sans">
-      {/* Header */}
-      <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <Activity className={`w-8 h-8 ${globalState === 'ERROR' ? 'text-rose-500 animate-pulse' : 'text-blue-500'}`} />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">Constellation WebUI</h1>
-            <p className="text-xs text-slate-500 uppercase tracking-widest">Unified Mission Control & Observatory</p>
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-4 md:p-8 font-sans selection:bg-blue-500/30">
+      
+      {/* INITIAL CONNECTION MODAL */}
+      {!isConnected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div className="bg-blue-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Link className={`w-8 h-8 text-blue-500 ${isConnecting ? 'animate-pulse' : ''}`} />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Constellation Core</h2>
+            <p className="text-slate-400 text-sm mb-8">Establish secure bridge to hardware satellites and monitoring systems.</p>
+            <button 
+              onClick={handleConnect}
+              disabled={isConnecting}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50"
+            >
+              {isConnecting ? <><Loader2 className="animate-spin w-5 h-5" /> Establishing...</> : 'Connect to WebUI'}
+            </button>
           </div>
         </div>
-        <div className="flex gap-6 items-center">
-          <div className="text-right hidden sm:block">
-            <div className="text-sm text-slate-400">Current Run</div>
-            <div className={`font-mono text-lg font-bold ${globalState === 'ERROR' ? 'text-rose-500' : 'text-white'}`}>{runId}</div>
+      )}
+
+      {/* HEADER */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-800 pb-6">
+        <div className="flex items-center gap-4">
+          <div className={`p-2 rounded-lg bg-slate-900 border border-slate-800 shadow-inner`}>
+            <Activity className={`w-8 h-8 ${globalState === 'RUN' ? 'text-emerald-400 animate-pulse' : 'text-blue-500'}`} />
           </div>
-          <div className="text-right hidden sm:block">
-            <div className="text-sm text-slate-400">Duration</div>
-            <div className="font-mono text-lg font-bold text-white">{runDuration}s</div>
+          <div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">CONSTELLATION <span className="text-blue-500">2026</span></h1>
+            <div className="flex items-center gap-2 text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              Live Cluster Monitoring
+            </div>
           </div>
-          <div className={`px-4 py-2 rounded-full border font-bold text-sm tracking-wide flex items-center gap-2 ${getStateColor(globalState)}`}>
-            STATE: {globalState}
+        </div>
+
+        <div className="flex items-center gap-4 bg-slate-900/50 p-2 rounded-2xl border border-slate-800/50">
+          <div className="px-4 text-center">
+            <p className="text-[10px] text-slate-500 uppercase font-bold">Active Run</p>
+            <p className="font-mono text-sm text-white">{runId}</p>
+          </div>
+          <div className="h-8 w-px bg-slate-800"></div>
+          <div className="px-4 text-center">
+            <p className="text-[10px] text-slate-500 uppercase font-bold">Uptime</p>
+            <p className="font-mono text-sm text-white">{runDuration}s</p>
+          </div>
+          <div className={`ml-2 px-4 py-2 rounded-xl border text-xs font-black tracking-widest ${getStateColor(globalState)}`}>
+            {globalState}
           </div>
         </div>
       </header>
 
-      {/* Main Grid - Bento Box Layout */}
+      {/* MAIN CONTENT */}
       <div className="grid grid-cols-12 gap-6">
         
-        {/* Left Column: Controls & Satellites (MissionControl) */}
+        {/* LEFT: MISSION CONTROL */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          
-          {/* FSM Controls */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                 <Terminal className="w-5 h-5 text-blue-400"/> FSM Controller
-               </h2>
-               <button onClick={() => setLogs([])} className="text-xs text-slate-500 hover:text-slate-300 underline">Clear Logs</button>
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-blue-500" /> Mission Control
+            </h3>
+
+            {/* OPERATOR GUIDE BANNER */}
+            <div className={`mb-6 p-3 rounded-xl border text-xs leading-relaxed flex items-start gap-3 transition-colors duration-500 ${globalState === 'ERROR' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-200'}`}>
+              <Info className="w-4 h-4 mt-0.5 shrink-0" />
+              <p><strong>Operator Guide:</strong> {getOperatorGuide()}</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <button 
                 onClick={() => handleTransition('INIT')} 
-                disabled={globalState === 'INIT' || globalState === 'RUN'} 
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors border border-slate-700 flex justify-center items-center gap-2">
-                <Power className="w-4 h-4"/> INIT
+                disabled={globalState === 'RUN'}
+                className="group p-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-xl transition-all disabled:opacity-20 flex flex-col items-center justify-center">
+                <Power className="w-5 h-5 mb-2 text-slate-400 group-hover:text-white transition-colors" />
+                <span className="block text-xs font-bold text-slate-300">INITIALIZE</span>
               </button>
+              
+              {/* ORBIT BUTTON - Pulses when state is INIT */}
               <button 
                 onClick={() => handleTransition('ORBIT')} 
-                disabled={globalState === 'ORBIT' || globalState === 'RUN'} 
-                className="px-4 py-2 bg-blue-900/20 hover:bg-blue-900/40 text-blue-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors border border-blue-500/30 flex justify-center items-center gap-2">
-                <Activity className="w-4 h-4"/> ORBIT
+                disabled={globalState === 'RUN'}
+                className={`group p-4 rounded-xl transition-all flex flex-col items-center justify-center border disabled:opacity-20 ${
+                  globalState === 'INIT' 
+                  ? 'bg-blue-600/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] animate-pulse hover:bg-blue-600/30 text-blue-300' 
+                  : 'bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-400'
+                }`}>
+                <Activity className="w-5 h-5 mb-2" />
+                <span className="block text-xs font-bold">ORBIT</span>
               </button>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-4">
+
+            <div className="space-y-3">
+              {/* START RUN BUTTON - Pulses when state is ORBIT */}
               <button 
                 onClick={() => handleTransition('RUN')} 
-                disabled={globalState !== 'ORBIT'} 
-                className="px-4 py-3 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm font-bold transition-colors border border-emerald-500/30 flex justify-center items-center gap-2">
-                <Play className="w-4 h-4"/> START RUN
+                disabled={globalState !== 'ORBIT'}
+                className={`w-full py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:grayscale disabled:opacity-20 border ${
+                  globalState === 'ORBIT'
+                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse hover:bg-emerald-500'
+                  : 'bg-emerald-600 text-white border-transparent shadow-lg shadow-emerald-900/20 hover:bg-emerald-500'
+                }`}>
+                <Play className="fill-current w-4 h-4" /> START ACQUISITION
               </button>
+              
               <button 
                 onClick={() => handleTransition('ORBIT')} 
-                disabled={globalState !== 'RUN'} 
-                className="px-4 py-3 bg-amber-600/20 hover:bg-amber-600/40 text-amber-500 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-sm font-bold transition-colors border border-amber-500/30 flex justify-center items-center gap-2">
-                <Square className="w-4 h-4"/> STOP RUN
+                disabled={globalState !== 'RUN'}
+                className="w-full py-4 bg-slate-800 hover:bg-amber-600/20 hover:text-amber-500 border border-slate-700 hover:border-amber-500/30 text-slate-400 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:opacity-20">
+                <Square className="fill-current w-4 h-4" /> STOP RUN
               </button>
             </div>
 
             <button 
-                onClick={() => handleTransition('ERROR')} 
-                disabled={globalState === 'ERROR'} 
-                className="w-full px-4 py-2 bg-rose-600/10 hover:bg-rose-600/30 text-rose-500 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-xs font-bold transition-colors border border-rose-500/20 flex justify-center items-center gap-2">
-                <ShieldAlert className="w-4 h-4"/> SIMULATE FATAL ERROR
-              </button>
-          </div>
+              onClick={() => handleTransition('ERROR')}
+              className="mt-6 w-full py-2 text-[10px] font-bold text-rose-500/50 hover:text-rose-500 border border-rose-500/10 hover:border-rose-500/40 rounded-lg transition-all">
+              INJECT CRITICAL FAILURE
+            </button>
+          </section>
 
-          {/* Satellite Roster */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Server className="w-5 h-5 text-purple-400"/> Connected Satellites
-            </h2>
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Server className="w-4 h-4 text-purple-500" /> Cluster Satellites
+            </h3>
             <div className="space-y-3">
               {satellites.map(sat => (
-                <div key={sat.id} className="p-3 bg-slate-950/50 rounded-lg border border-slate-800 flex justify-between items-center transition-all">
+                <div key={sat.id} className="group p-4 bg-slate-950/40 border border-slate-800/50 rounded-xl flex justify-between items-center hover:border-slate-700 transition-all">
                   <div>
-                    <div className="font-medium text-sm text-slate-200">{sat.name}</div>
-                    <div className="text-xs text-slate-500">{sat.type}</div>
+                    <p className="text-sm font-bold text-white">{sat.name}</p>
+                    <p className="text-[10px] text-slate-500 font-mono tracking-tighter uppercase">{sat.type}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-sm font-bold ${getStateColor(sat.state)}`}>
+                  <div className="text-right">
+                    <span className={`text-[9px] px-2 py-1 rounded font-black tracking-tighter ${getStateColor(sat.state)}`}>
                       {sat.state}
                     </span>
-                    <span className={`text-[10px] font-mono ${sat.ping === 0 ? 'text-rose-500' : 'text-slate-500'}`}>
+                    <p className={`text-[10px] font-mono mt-1 ${sat.ping === 0 ? 'text-rose-500 animate-pulse' : 'text-slate-600'}`}>
                       {sat.ping === 0 ? 'OFFLINE' : `${sat.ping}ms`}
-                    </span>
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Right Column: Telemetry Graph & Logs (Observatory) */}
+        {/* RIGHT: TELEMETRY & OBSERVATORY */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          
-          {/* Telemetry Graph */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg h-[350px] flex flex-col">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-emerald-400"/> Real-time Telemetry (CMDP)
-            </h2>
-            <div className="flex-1 w-full relative">
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl h-[400px] flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-500" /> CMDP Telemetry Stream
+              </h3>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span><span className="text-[10px] text-slate-400 uppercase font-bold">Event Rate</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500"></span><span className="text-[10px] text-slate-400 uppercase font-bold">Temp</span></div>
+              </div>
+            </div>
+            
+            <div className="flex-1 relative">
               {globalState !== 'RUN' && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm rounded-lg border border-dashed border-slate-700">
-                  <div className={`flex items-center gap-2 font-medium ${globalState === 'ERROR' ? 'text-rose-500' : 'text-slate-400'}`}>
-                    <AlertCircle className="w-5 h-5"/> 
-                    {globalState === 'ERROR' ? 'SYSTEM HALTED: Telemetry Offline' : 'Awaiting RUN state for telemetry data'}
-                  </div>
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm rounded-xl border border-dashed border-slate-800">
+                  <p className={`text-sm font-bold tracking-widest uppercase flex items-center gap-2 ${globalState === 'ERROR' ? 'text-rose-500' : 'text-slate-500'}`}>
+                    <AlertCircle className="w-4 h-4" /> 
+                    {globalState === 'ERROR' ? 'SYSTEM HALTED' : 'Hardware Idle - Awaiting RUN'}
+                  </p>
                 </div>
               )}
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={telemetry} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <LineChart data={telemetry}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                  <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickMargin={10} />
-                  <YAxis yAxisId="left" stroke="#64748b" fontSize={12} domain={[800, 1400]} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} domain={[20, 30]} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                  />
-                  <Line yAxisId="left" type="monotone" dataKey="eventRate" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} name="Event Rate (Hz)" />
-                  <Line yAxisId="right" type="monotone" dataKey="temp" stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} name="Temp (°C)" />
+                  <XAxis dataKey="time" stroke="#475569" fontSize={10} tickMargin={10} />
+                  <YAxis yAxisId="L" stroke="#475569" fontSize={10} domain={[1000, 1500]} />
+                  <YAxis yAxisId="R" orientation="right" stroke="#475569" fontSize={10} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '10px' }} />
+                  <Line yAxisId="L" type="stepAfter" dataKey="eventRate" stroke="#3b82f6" strokeWidth={3} dot={false} isAnimationActive={false} />
+                  <Line yAxisId="R" type="monotone" dataKey="temp" stroke="#f59e0b" strokeWidth={3} dot={false} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </section>
 
-          {/* Log Interface */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-0 shadow-lg overflow-hidden flex flex-col h-[250px]">
-            <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-slate-400"/> System Logs
-              </h2>
-              <span className="text-xs text-slate-500 font-mono">Total Messages: {logs.length}</span>
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl flex flex-col h-[300px] overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Terminal className="w-4 h-4" /> Observatory Logs
+              </h3>
+              <div className="text-[10px] font-mono text-slate-600 tracking-tighter">LISTENING ON PORT 23953</div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 bg-[#0a0f18]">
-              {logs.length === 0 ? (
-                <div className="text-slate-600 italic">Logs cleared. Awaiting system events...</div>
-              ) : (
-                logs.map((log, i) => (
-                  <div key={i} className="flex gap-4 hover:bg-slate-800/50 py-1.5 px-2 rounded group transition-colors">
-                    <span className="text-slate-600 min-w-[70px]">{log.time}</span>
-                    <span className={`font-bold min-w-[70px] ${getLogColor(log.level)}`}>{log.level}</span>
-                    <span className="text-purple-400/80 min-w-[140px] truncate">[{log.sender}]</span>
-                    <span className="text-slate-300 group-hover:text-white transition-colors">{log.msg}</span>
-                  </div>
-                ))
-              )}
+            <div className="flex-1 overflow-y-auto p-4 font-mono text-[11px] leading-relaxed space-y-1 scrollbar-hide">
+              {logs.map((log, i) => (
+                <div key={i} className="flex gap-4 py-1 border-b border-white/[0.02] hover:bg-white/[0.02] px-2 rounded transition-colors">
+                  <span className="text-slate-600 shrink-0">{log.time}</span>
+                  <span className={`font-black shrink-0 w-16 ${log.level === 'CRITICAL' ? 'text-rose-500 animate-pulse' : log.level === 'WARNING' ? 'text-amber-500' : 'text-emerald-500'}`}>{log.level}</span>
+                  <span className="text-blue-400 shrink-0 w-24 opacity-80">[{log.sender}]</span>
+                  <span className="text-slate-300 italic">{log.msg}</span>
+                </div>
+              ))}
+              {logs.length === 0 && <p className="text-slate-700 italic">No logs in buffer...</p>}
             </div>
-          </div>
-
+          </section>
         </div>
       </div>
     </div>
