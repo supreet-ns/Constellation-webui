@@ -117,9 +117,9 @@ export default function ConstellationCommandCenter() {
   const getOperatorGuide = () => {
     switch(globalState) {
       case 'INIT': return "System initialized. Press [O] to launch satellites into ORBIT.";
-      case 'ORBIT': return "Satellites configured. Press [R] to START ACQUISITION.";
+      case 'ORBIT': return "Satellites configured. Press [R] to RUN and start data acquisition.";
       case 'RUN': return "Data acquisition in progress. Press [S] to STOP run.";
-      case 'ERROR': return "CRITICAL FAILURE DETECTED. System halted. Require manual reset.";
+      case 'ERROR': return "CRITICAL FAILURE DETECTED. System halted. Requires manual reset or INITIALIZE.";
       default: return "Awaiting operator input.";
     }
   };
@@ -142,7 +142,7 @@ export default function ConstellationCommandCenter() {
               <Link className={`w-8 h-8 text-blue-300 ${isConnecting ? 'animate-pulse' : ''}`} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-2 relative z-10">Constellation Core</h2>
-            <p className="text-slate-300 text-sm mb-8 relative z-10">Establish secure bridge to hardware satellites and monitoring systems.</p>
+            <p className="text-slate-300 text-sm mb-8 relative z-10">Establish a secure bridge between hardware satellites and monitoring systems.</p>
             <button 
               onClick={handleConnect}
               disabled={isConnecting}
@@ -235,7 +235,7 @@ export default function ConstellationCommandCenter() {
                     ? 'bg-emerald-500/30 text-emerald-100 border-emerald-400/60 shadow-[0_0_30px_rgba(52,211,153,0.4)] animate-pulse hover:bg-emerald-500/40'
                     : 'bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 hover:text-white'
                   }`}>
-                  <Play className="fill-current w-4 h-4" /> START ACQUISITION
+                  <Play className="fill-current w-4 h-4" /> RUN
                   <kbd className="absolute right-4 px-2 py-1 bg-black/30 border border-white/20 rounded text-[10px] text-white/70 font-mono">R</kbd>
                 </button>
                 
@@ -243,7 +243,7 @@ export default function ConstellationCommandCenter() {
                   onClick={() => handleTransition('ORBIT')} 
                   disabled={globalState !== 'RUN'}
                   className="w-full relative py-4 bg-white/5 hover:bg-amber-500/20 hover:text-amber-300 border border-white/10 hover:border-amber-500/30 text-slate-300 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:opacity-30 backdrop-blur-md shadow-sm">
-                  <Square className="fill-current w-4 h-4" /> STOP RUN
+                  <Square className="fill-current w-4 h-4" /> STOP
                   <kbd className="absolute right-4 px-2 py-1 bg-black/30 border border-white/10 rounded text-[10px] text-slate-400 font-mono">S</kbd>
                 </button>
               </div>
