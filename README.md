@@ -63,6 +63,8 @@ Open your browser and navigate to the local host URL provided in the terminal (d
 
 ---
 
+---
+
 ## 📄 License
 
-This project is open-source and available under the [MIT License](LICENSE).
+This project is licensed under the [EUPL-1.2 License](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12) (European Union Public License), aligning with the core Constellation framework.
