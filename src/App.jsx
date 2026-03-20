@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Terminal, Activity, Server, AlertCircle, Play, Square, ShieldAlert, Power, Link, Loader2, Info } from 'lucide-react';
 
@@ -28,14 +28,32 @@ export default function ConstellationCommandCenter() {
     setTimeout(() => {
       setIsConnected(true);
       setIsConnecting(false);
-      addLog('STATUS', 'Constellation', 'Handshake successful. Connected to CSCP/CMDP core.');
-      addLog('INFO', 'Network', 'Gateway established at 127.0.0.1:23953');
+      setLogs(prev => [
+        { time: new Date().toLocaleTimeString(), level: 'INFO', sender: 'Network', msg: 'Gateway established at 127.0.0.1:23953' },
+        { time: new Date().toLocaleTimeString(), level: 'STATUS', sender: 'Constellation', msg: 'Handshake successful. Connected to CSCP/CMDP core.' },
+        ...prev
+      ]);
     }, 1500);
   };
 
-  const addLog = (level, sender, msg) => {
-    setLogs(prev => [{ time: new Date().toLocaleTimeString(), level, sender, msg }, ...prev].slice(0, 50));
-  };
+  // Safe Transition Handler (Wrapped in useCallback to prevent HMR crashes)
+  const handleTransition = useCallback((newState) => {
+    setGlobalState(newState);
+    setSatellites(prevSats => prevSats.map(s => ({ ...s, state: newState })));
+    
+    if (newState === 'RUN') {
+      setRunId(`Run_${Math.floor(2000 + Math.random() * 5000)}`);
+      setRunDuration(0);
+      setTelemetry([]);
+    }
+    
+    setLogs(prev => [{
+      time: new Date().toLocaleTimeString(),
+      level: newState === 'ERROR' ? 'CRITICAL' : 'STATUS',
+      sender: 'MissionControl',
+      msg: `FSM Transition: -> ${newState}`
+    }, ...prev].slice(0, 50));
+  }, []);
 
   // Background UI Heartbeat (Pings)
   useEffect(() => {
@@ -65,25 +83,37 @@ export default function ConstellationCommandCenter() {
         });
 
         if (Math.random() > 0.7) {
-          addLog('INFO', 'Storage', 'Event packet synchronized and written to disk.');
+          setLogs(prev => [{
+            time: new Date().toLocaleTimeString(),
+            level: 'INFO',
+            sender: 'Storage',
+            msg: 'Event packet synchronized and written to disk.'
+          }, ...prev].slice(0, 50));
         }
       }, 1000);
     }
     return () => clearInterval(interval);
   }, [globalState]);
 
-  const handleTransition = (newState) => {
-    setGlobalState(newState);
-    setSatellites(satellites.map(s => ({ ...s, state: newState })));
-    
-    if (newState === 'RUN') {
-      setRunId(`Run_${Math.floor(2000 + Math.random() * 5000)}`);
-      setRunDuration(0);
-      setTelemetry([]);
-    }
-    
-    addLog(newState === 'ERROR' ? 'CRITICAL' : 'MissionControl', `FSM Transition: ${globalState} -> ${newState}`);
-  };
+  // --- NEW: THE KEYBOARD SHORTCUT LISTENER ---
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const handleKeyDown = (e) => {
+      // Prevents shortcuts from firing if the user is typing in an input box
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      const key = e.key.toLowerCase();
+      if (key === 'i' && globalState !== 'RUN') handleTransition('INIT');
+      if (key === 'o' && globalState !== 'RUN') handleTransition('ORBIT');
+      if (key === 'r' && globalState === 'ORBIT') handleTransition('RUN');
+      if (key === 's' && globalState === 'RUN') handleTransition('ORBIT');
+      if (key === 'e' && globalState !== 'ERROR') handleTransition('ERROR');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isConnected, globalState, handleTransition]);
 
   const getStateColor = (state) => {
     const colors = {
@@ -95,12 +125,11 @@ export default function ConstellationCommandCenter() {
     return colors[state] || 'text-slate-400';
   };
 
-  // UX Helper: Dynamic Operator Guide
   const getOperatorGuide = () => {
     switch(globalState) {
-      case 'INIT': return "System initialized and awaiting configuration. Click ORBIT to launch and configure satellites.";
-      case 'ORBIT': return "Satellites are in orbit and configured. Click START ACQUISITION to begin recording telemetry data.";
-      case 'RUN': return "Data acquisition in progress. Monitoring live CMDP telemetry stream.";
+      case 'INIT': return "System initialized and awaiting configuration. Press [O] to launch satellites into ORBIT.";
+      case 'ORBIT': return "Satellites configured. Press [R] to START ACQUISITION and record telemetry.";
+      case 'RUN': return "Data acquisition in progress. Press [S] to STOP run and return to ORBIT.";
       case 'ERROR': return "CRITICAL FAILURE DETECTED. System halted. Require manual reset.";
       default: return "Awaiting operator input.";
     }
@@ -109,7 +138,6 @@ export default function ConstellationCommandCenter() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-4 md:p-8 font-sans selection:bg-blue-500/30">
       
-      {/* INITIAL CONNECTION MODAL */}
       {!isConnected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
           <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
@@ -129,7 +157,6 @@ export default function ConstellationCommandCenter() {
         </div>
       )}
 
-      {/* HEADER */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-slate-800 pb-6">
         <div className="flex items-center gap-4">
           <div className={`p-2 rounded-lg bg-slate-900 border border-slate-800 shadow-inner`}>
@@ -160,17 +187,13 @@ export default function ConstellationCommandCenter() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
       <div className="grid grid-cols-12 gap-6">
-        
-        {/* LEFT: MISSION CONTROL */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <Terminal className="w-4 h-4 text-blue-500" /> Mission Control
             </h3>
 
-            {/* OPERATOR GUIDE BANNER */}
             <div className={`mb-6 p-3 rounded-xl border text-xs leading-relaxed flex items-start gap-3 transition-colors duration-500 ${globalState === 'ERROR' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-200'}`}>
               <Info className="w-4 h-4 mt-0.5 shrink-0" />
               <p><strong>Operator Guide:</strong> {getOperatorGuide()}</p>
@@ -180,50 +203,58 @@ export default function ConstellationCommandCenter() {
               <button 
                 onClick={() => handleTransition('INIT')} 
                 disabled={globalState === 'RUN'}
-                className="group p-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-xl transition-all disabled:opacity-20 flex flex-col items-center justify-center">
+                className="group relative p-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 rounded-xl transition-all disabled:opacity-20 flex flex-col items-center justify-center">
+                {/* NEW: VISUAL SHORTCUT HINT */}
+                <kbd className="absolute top-2 right-2 px-1.5 py-0.5 bg-slate-900 border border-slate-700 rounded text-[10px] text-slate-400 font-mono shadow-sm">I</kbd>
                 <Power className="w-5 h-5 mb-2 text-slate-400 group-hover:text-white transition-colors" />
                 <span className="block text-xs font-bold text-slate-300">INITIALIZE</span>
               </button>
               
-              {/* ORBIT BUTTON - Pulses when state is INIT */}
               <button 
                 onClick={() => handleTransition('ORBIT')} 
                 disabled={globalState === 'RUN'}
-                className={`group p-4 rounded-xl transition-all flex flex-col items-center justify-center border disabled:opacity-20 ${
+                className={`group relative p-4 rounded-xl transition-all flex flex-col items-center justify-center border disabled:opacity-20 ${
                   globalState === 'INIT' 
                   ? 'bg-blue-600/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] animate-pulse hover:bg-blue-600/30 text-blue-300' 
                   : 'bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-400'
                 }`}>
+                {/* NEW: VISUAL SHORTCUT HINT */}
+                <kbd className="absolute top-2 right-2 px-1.5 py-0.5 bg-slate-900/40 border border-current rounded text-[10px] opacity-70 font-mono shadow-sm">O</kbd>
                 <Activity className="w-5 h-5 mb-2" />
                 <span className="block text-xs font-bold">ORBIT</span>
               </button>
             </div>
 
             <div className="space-y-3">
-              {/* START RUN BUTTON - Pulses when state is ORBIT */}
               <button 
                 onClick={() => handleTransition('RUN')} 
                 disabled={globalState !== 'ORBIT'}
-                className={`w-full py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:grayscale disabled:opacity-20 border ${
+                className={`w-full relative py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:grayscale disabled:opacity-20 border ${
                   globalState === 'ORBIT'
                   ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse hover:bg-emerald-500'
                   : 'bg-emerald-600 text-white border-transparent shadow-lg shadow-emerald-900/20 hover:bg-emerald-500'
                 }`}>
                 <Play className="fill-current w-4 h-4" /> START ACQUISITION
+                {/* NEW: VISUAL SHORTCUT HINT */}
+                <kbd className="absolute right-4 px-2 py-1 bg-black/20 border border-white/20 rounded text-[10px] text-white/80 font-mono">R</kbd>
               </button>
               
               <button 
                 onClick={() => handleTransition('ORBIT')} 
                 disabled={globalState !== 'RUN'}
-                className="w-full py-4 bg-slate-800 hover:bg-amber-600/20 hover:text-amber-500 border border-slate-700 hover:border-amber-500/30 text-slate-400 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:opacity-20">
+                className="w-full relative py-4 bg-slate-800 hover:bg-amber-600/20 hover:text-amber-500 border border-slate-700 hover:border-amber-500/30 text-slate-400 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-3 disabled:opacity-20">
                 <Square className="fill-current w-4 h-4" /> STOP RUN
+                {/* NEW: VISUAL SHORTCUT HINT */}
+                <kbd className="absolute right-4 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-[10px] font-mono opacity-80">S</kbd>
               </button>
             </div>
 
             <button 
               onClick={() => handleTransition('ERROR')}
-              className="mt-6 w-full py-2 text-[10px] font-bold text-rose-500/50 hover:text-rose-500 border border-rose-500/10 hover:border-rose-500/40 rounded-lg transition-all">
+              className="mt-6 relative w-full py-2 text-[10px] font-bold text-rose-500/50 hover:text-rose-500 border border-rose-500/10 hover:border-rose-500/40 rounded-lg transition-all flex items-center justify-center">
               INJECT CRITICAL FAILURE
+              {/* NEW: VISUAL SHORTCUT HINT */}
+              <kbd className="absolute right-2 px-1.5 py-0.5 bg-rose-950 border border-rose-900 rounded text-[9px] font-mono opacity-80">E</kbd>
             </button>
           </section>
 
@@ -252,7 +283,6 @@ export default function ConstellationCommandCenter() {
           </section>
         </div>
 
-        {/* RIGHT: TELEMETRY & OBSERVATORY */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl h-[400px] flex flex-col">
             <div className="flex justify-between items-center mb-6">
